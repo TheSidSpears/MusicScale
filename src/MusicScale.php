@@ -30,22 +30,48 @@ class MusicScale
 
     /**
      * Scale constructor.
-     * @param $scale
-     * @param $mode
+     * @param string $scale
+     * @param string $mode
+     * @throws \Exception
      */
-    public function __construct($scale, $mode)
+    public function __construct(string $scale, string $mode)
     {
+        $this->setScale($scale);
+        $this->mode = $this->getMode($mode);
+    }
+
+    /**
+     * @param string $scale
+     * @throws \Exception
+     */
+    protected function setScale(string $scale)
+    {
+        if (!in_array($scale,$this->AllNotes)){
+            throw new \Exception('Unknown scale');
+        }
         $this->scale = $scale;
-        $this->mode = $mode;
+    }
+
+    /**
+     * @param string $mode
+     * @return ModeInterface
+     * @throws \Exception
+     */
+    protected function getMode(string $mode): ModeInterface
+    {
+        switch ($mode) {
+            case self::IONIAN:
+                return new IonianMode();
+            case self::AEOLIAN:
+                return new AeolianMode();
+            default :
+                throw new \Exception('Unknown mode');
+        }
     }
 
     protected function generateNotes()
     {
-        if ($this->mode === self::IONIAN) {
-            $mapping = [2, 2, 1, 2, 2, 2, 1];
-        } elseif ($this->mode === self::AEOLIAN) {
-            $mapping = [2, 1, 2, 2, 1, 2, 2];
-        }
+        $steps = $this->mode->getSteps();
 
         $currentKey = null;
         for ($i = 0; $i <= 6; $i++) {
@@ -53,7 +79,7 @@ class MusicScale
                 $currentKey = array_search($this->scale, $this->AllNotes);
                 $this->notes[] = $this->AllNotes[$currentKey];
             } else {
-                $step = $mapping[$i - 1];
+                $step = $steps[$i - 1];
                 $currentKey += $step;
 
                 if ($currentKey > 11) {
@@ -66,6 +92,9 @@ class MusicScale
 
     }
 
+    /**
+     * @return array
+     */
     public function getNotes()
     {
         if (empty($this->notes)) {
